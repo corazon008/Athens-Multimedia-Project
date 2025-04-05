@@ -1,4 +1,4 @@
-package com.streaming.server;
+package server;
 
 import java.io.Serializable;
 
