@@ -4,17 +4,24 @@ import shared.ClientInfoPacket;
 import shared.ProtocolType;
 import shared.ServerInfo;
 import shared.VideoFormat;
+import shared.UserSelection;
 
 import java.io.*;
 import java.net.*;
 
 public class Client {
     public static void main(String[] args) throws InterruptedException {
-        SpeedTest speedTest = new SpeedTest(15000);
+        SpeedTest speedTest = new SpeedTest(5000);
         speedTest.StartSpeedTest();
+
+        StreamSettings.Show();
+
+        speedTest.WaitForSpeedTest();
         double downloadSpeed = speedTest.getDownloadSpeed().doubleValue() / 1000000; // Convertir en Mbps
         System.out.println("Vitesse de téléchargement : " + downloadSpeed + " Mbps");
 
+        StreamSettings.Wait();
+        System.out.println("Format sélectionné : " + UserSelection.format);
     }
 
     public static void main1(String[] args) {

@@ -1,54 +1,50 @@
 package client;
 
+import client.UI.FormatView;
+import client.UI.ProtocolView;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.application.Application;
-import javafx.scene.Scene;
+import javafx.stage.StageStyle;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
-public class StreamSettings extends Application {
+import java.util.concurrent.CountDownLatch;
 
-    public static void main(String[] args) {
-        launch(args);
+public class StreamSettings {
+    private static CountDownLatch latch;
+
+    public static void Show() {
+        latch = new CountDownLatch(1);
+
+        new JFXPanel(); // Initialise JavaFX si pas déjà lancé
+
+        Platform.runLater(() -> {
+            Stage stage = new Stage(StageStyle.DECORATED);
+            FormatView root = new FormatView(10, latch); // ⬅️ on passe le latch
+
+            stage.setTitle("Choisissez vos paramètres");
+            stage.setScene(new Scene(root, 400, 300));
+            stage.initModality(Modality.APPLICATION_MODAL); // bloque jusqu'à fermeture
+            stage.show();
+        });
     }
 
-    @Override
-    public void start(Stage primaryStage) {
-        // Crée un groupe de boutons radio
-        ToggleGroup group = new ToggleGroup();
+    public static void Wait(){
+        try {
+            latch.await(); // Attend que l’utilisateur valide
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
-        RadioButton udpButton = new RadioButton("UDP");
-        udpButton.setToggleGroup(group);
-
-        RadioButton tcpButton = new RadioButton("TCP");
-        tcpButton.setToggleGroup(group);
-
-        RadioButton rtpButton = new RadioButton("RTP");
-        rtpButton.setToggleGroup(group);
-
-        Label selectedLabel = new Label("Aucune option sélectionnée");
-
-        // Gérer le changement de sélection
-        group.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            if (newToggle != null) {
-                RadioButton selected = (RadioButton) group.getSelectedToggle();
-                selectedLabel.setText("Sélectionné : " + selected.getText());
-            }
-        });
-
-        VBox layout = new VBox(10); // espace de 10px entre les éléments
-        layout.getChildren().addAll(udpButton, tcpButton, rtpButton, selectedLabel);
-
-        Scene scene = new Scene(layout, 300, 200);
-        primaryStage.setTitle("Exemple RadioButton JavaFX");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+    public static void main(String[] args) {
+        Show();
+        Wait();
     }
 }
