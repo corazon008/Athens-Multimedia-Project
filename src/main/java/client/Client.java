@@ -1,44 +1,27 @@
 package client;
 
+import shared.ClientInfoPacket;
 import shared.ProtocolType;
 import shared.ServerInfo;
+import shared.VideoFormat;
 
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
 
 public class Client {
-        public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
+        SpeedTest speedTest = new SpeedTest(15000);
+        speedTest.StartSpeedTest();
+        double downloadSpeed = speedTest.getDownloadSpeed().doubleValue() / 1000000; // Convertir en Mbps
+        System.out.println("Vitesse de téléchargement : " + downloadSpeed + " Mbps");
+
+    }
+
+    public static void main1(String[] args) {
         try (Socket socket = new Socket(ServerInfo.getListenSocketIP(), ServerInfo.getListenSocketPort())) {
-            Scanner scanner = new Scanner(System.in);
+            ClientInfoPacket clientInfo = new ClientInfoPacket(1000, VideoFormat.MP4);
 
-            // Demander à l'utilisateur de choisir un protocole
-            System.out.println("Choisissez un protocole de streaming :");
-            System.out.println("1 - UDP");
-            System.out.println("2 - TCP");
-            System.out.println("3 - RTP");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
-
-            ProtocolType protocol;
-            switch (choice) {
-                case 1:
-                    protocol = ProtocolType.UDP;
-                    break;
-                case 2:
-                    protocol = ProtocolType.TCP;
-                    break;
-                case 3:
-                    protocol = ProtocolType.RTP;
-                    break;
-                default:
-                    protocol = ProtocolType.UDP;
-            }
-
-            // Envoyer le protocole au serveur
-            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            oos.writeObject(protocol);
-            oos.flush();
+            SendObject(clientInfo, socket);
 
             // Lire l'URL du flux envoyé par le serveur
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -51,6 +34,14 @@ public class Client {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
+
+    private static void SendObject(Object object, Socket socket) throws IOException {
+        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+        oos.writeObject(object);
+        oos.flush();
+    }
+
 }
 
