@@ -105,6 +105,8 @@ public class Server {
             for (Resolution resolution : SharedInfo.getResolutions()) {
                 for (VideoFormat format : SharedInfo.getVideoFormats()) {
                     Video newVideo = video.getVideoWithNew(format, resolution);
+                    if (newVideo.HavehigherQualitythan(video))
+                        continue;
                     File newfile = new File(newVideo.getVideoPath());
                     if (newfile.exists())
                         continue;
