@@ -50,7 +50,7 @@ public class Video implements Cloneable {
         this.videoPath = other.videoPath;
     }
 
-    public boolean HavehigherQualitythan(Video other) {
+    public boolean HaveHigherResolutionthan(Video other) {
         return this.getIntResolution() > other.getIntResolution();
     }
 
