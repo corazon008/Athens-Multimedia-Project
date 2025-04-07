@@ -1,5 +1,7 @@
 package shared;
 
+import shared.Enum.ProtocolType;
+
 import java.io.Serializable;
 
 public class FilePacket implements Serializable {

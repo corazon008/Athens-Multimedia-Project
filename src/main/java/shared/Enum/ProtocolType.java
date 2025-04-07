@@ -1,4 +1,4 @@
-package shared;
+package shared.Enum;
 
 import java.io.Serializable;
 

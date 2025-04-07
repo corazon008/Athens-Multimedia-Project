@@ -3,7 +3,7 @@ package client.UI;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import shared.UserSelection;
-import shared.VideoFormat;
+import shared.Enum.VideoFormat;
 
 import java.util.concurrent.CountDownLatch;
 

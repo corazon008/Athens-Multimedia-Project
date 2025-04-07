@@ -1,13 +1,13 @@
 package client;
 
 import shared.ClientInfoPacket;
-import shared.ProtocolType;
 import shared.ServerInfo;
-import shared.VideoFormat;
+import shared.Enum.VideoFormat;
 import shared.UserSelection;
 
 import java.io.*;
 import java.net.*;
+import java.util.List;
 
 public class Client {
     public static void main(String[] args) throws InterruptedException {
@@ -17,11 +17,21 @@ public class Client {
         StreamSettings.Show();
 
         speedTest.WaitForSpeedTest();
-        double downloadSpeed = speedTest.getDownloadSpeed().doubleValue() / 1000000; // Convertir en Mbps
-        System.out.println("Vitesse de téléchargement : " + downloadSpeed + " Mbps");
+        double downloadSpeed = speedTest.getDownloadSpeed().doubleValue() / 1_000; // Convert in Kbps
+        System.out.println("Vitesse de téléchargement : " + downloadSpeed + " Kbps");
 
         StreamSettings.Wait();
         System.out.println("Format sélectionné : " + UserSelection.format);
+        try (Socket socket = new Socket(ServerInfo.getListenSocketIP(), ServerInfo.getListenSocketPort())) {
+
+            ClientInfoPacket clientInfo = new ClientInfoPacket(downloadSpeed, UserSelection.format);
+            SendObject(clientInfo, socket);
+
+            List<File> films = (List<File>) new ObjectInputStream(socket.getInputStream()).readObject();
+            System.out.println("Films disponibles : " + films);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main1(String[] args) {
@@ -49,6 +59,5 @@ public class Client {
         oos.writeObject(object);
         oos.flush();
     }
-
 }
 

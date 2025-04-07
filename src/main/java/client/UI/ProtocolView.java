@@ -1,11 +1,8 @@
 package client.UI;
 
-import javafx.collections.ObservableList;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
-import shared.ProtocolType;
+import shared.Enum.ProtocolType;
 
 public class ProtocolView extends VBox {
     public ProtocolView(double spacing) {
