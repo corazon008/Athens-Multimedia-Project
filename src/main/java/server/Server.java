@@ -15,11 +15,10 @@ import shared.ServerInfo;
 import shared.SharedInfo;
 
 public class Server {
-    private static Map<Integer, Resolution> bitratesIntegerToResolution = Map.of(400, Resolution.P240, 750, Resolution.P360, 1000, Resolution.P480, 2500, Resolution.P720, 4500, Resolution.P1080);
-    private static Map<Resolution, Integer> bitrates = Map.of(Resolution.P240, 400, Resolution.P360, 750, Resolution.P480, 1000, Resolution.P720, 2500, Resolution.P1080, 4500);
+    private static Map<Integer, Resolution> bitrates = Map.of(400, Resolution.P240, 750, Resolution.P360, 1000, Resolution.P480, 2500, Resolution.P720, 4500, Resolution.P1080);
 
     public static void main(String[] args) throws Exception {
-        //FfmpegMakeAllResAndFormat();
+        FfmpegMakeAllResAndFormat();
         try (ServerSocket serverSocket = new ServerSocket(ServerInfo.getListenSocketPort())) {
             System.out.println("Serveur en attente d'un client...");
             Socket clientSocket = serverSocket.accept();
@@ -61,7 +60,7 @@ public class Server {
 
     private static List<Resolution> getResolutions(double downloadSpeed) {
         List<Resolution> availableResolutions = new ArrayList<>();
-        for (Map.Entry<Integer, Resolution> entry : bitratesIntegerToResolution.entrySet()) {
+        for (Map.Entry<Integer, Resolution> entry : bitrates.entrySet()) {
             if (downloadSpeed >= entry.getKey()) {
                 availableResolutions.add(entry.getValue());
             }
@@ -96,10 +95,11 @@ public class Server {
             boolean videoExists = false;
             for (Video t_video : highestResVideos) {
                 if (video.SameVideo(t_video)) {
-                    if (video.HaveHigherResolutionthan(t_video)) {
-                        highestResVideos.remove(t_video);
-                        highestResVideos.add(video);
-                    }
+                    if (video.HaveHigherOrEqResolutionthan(t_video))
+                        if (video.HaveBetterFormatthan(t_video)) {
+                            highestResVideos.remove(t_video);
+                            highestResVideos.add(video);
+                        }
                     videoExists = true;
                     break;
                 }
@@ -118,47 +118,33 @@ public class Server {
                         continue;
                     System.out.println(newfile.getPath());
 
-                    ProcessBuilder builder;
-                    if (SystemInfo.hasAMDGPU()) {
-                        builder = new ProcessBuilder(
-                                ServerInfo.getFfmpegPath(),
-                                //"-hwaccel", "auto",
-                                "-i", video.getVideoPath(),
-                                "-c:v", "h264_amf",
-                                "-b:v", String.format("%sk", bitrates.get(newVideo.getResolution())),
-                                "-quality", "quality",
-                                "-c:a", "aac",
-                                "-b:a", "128k",
-                                "-vf", String.format("scale=-2:%s", newVideo.getIntResolution()),
-                                newfile.getPath()
-                        );
-
-                    } else {
-                        builder = new ProcessBuilder(
-                                ServerInfo.getFfmpegPath(),
-                                "-i", video.getVideoPath(),
-                                "-c:v", "libx264",
-                                "-b:v", String.format("%sk", bitrates.get(newVideo.getResolution())),
-                                "-preset", "slow",
-                                "-crf", "23",
-                                "-c:a", "aac",
-                                "-b:a", "128k",
-                                "-vf", String.format("scale=-2:%s", newVideo.getIntResolution()),
-                                newfile.getPath()
-                        );
-                    }
-
-                    System.out.println(builder.command());
-
-                    builder.inheritIO();
-                    try {
-                        Process ffmpegProcess = builder.start();
-                        ffmpegProcess.waitFor();
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    FfmpegTranscode(video, newVideo);
                 }
             }
+        }
+    }
+
+    private static void FfmpegTranscode(Video input, Video output) {
+        ProcessBuilder builder = new ProcessBuilder(
+                ServerInfo.getFfmpegPath(),
+                "-i", input.getVideoPath(),
+                "-c:v", output.getCodec(),
+                "-preset", "slow",
+                "-crf", output.getBitrateVariation(),
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-vf", String.format("scale=-2:%s", output.getIntResolution()),
+                output.getVideoPath()
+        );
+
+        System.out.println(builder.command());
+
+        builder.inheritIO();
+        try {
+            Process ffmpegProcess = builder.start();
+            ffmpegProcess.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

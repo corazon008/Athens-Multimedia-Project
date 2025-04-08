@@ -7,8 +7,11 @@ import shared.SharedInfo;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class Video implements Cloneable {
+    private static Map<Resolution, Integer> bitrates = Map.of(Resolution.P240, 400, Resolution.P360, 750, Resolution.P480, 1000, Resolution.P720, 2500, Resolution.P1080, 4500);
+
     private Resolution resolution;
     private VideoFormat videoFormat;
     private String videoName;
@@ -54,6 +57,18 @@ public class Video implements Cloneable {
         return this.getIntResolution() > other.getIntResolution();
     }
 
+    public boolean HaveHigherOrEqResolutionthan(Video other) {
+        return this.getIntResolution() >= other.getIntResolution();
+    }
+
+    public boolean HaveBetterFormatthan(Video other) {
+        if (other.videoFormat == VideoFormat.AVI)
+            return true;
+        if (this.videoFormat == VideoFormat.AVI)
+            return false;
+        return true;
+    }
+
     public int getIntResolution() {
         return Integer.parseInt(resolution.getLabel().replace("p", ""));
     }
@@ -78,6 +93,18 @@ public class Video implements Cloneable {
             copy.resolution = res;
 
         return copy;
+    }
+    public String getCodec(){
+        return (videoFormat == VideoFormat.AVI) ? "libx264" : "libx265";
+    }
+
+    // e.g 400k
+    public String getBitrate() {
+        return String.format("%sk", bitrates.get(resolution));
+    }
+
+    public String getBitrateVariation() {
+        return getCodec().equals("libx264") ? "23" : "27";
     }
 
     public String getVideoFileName() {
