@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import shared.ClientInfoPacket;
 import shared.Enum.ProtocolType;
@@ -107,6 +109,8 @@ public class Server {
             if (!videoExists) highestResVideos.add(video);
         }
 
+        ExecutorService executor = Executors.newFixedThreadPool(3); // max 4 transcodages en parallèle
+
         for (Video video : highestResVideos) {
             for (Resolution resolution : SharedInfo.getResolutions()) {
                 for (VideoFormat format : SharedInfo.getVideoFormats()) {
@@ -118,8 +122,17 @@ public class Server {
                         continue;
                     System.out.println(newfile.getPath());
 
-                    FfmpegTranscode(video, newVideo);
+                    // Submit task to thread pool
+                    executor.submit(() -> FfmpegTranscode(new Video(video), newVideo));
                 }
+            }
+        }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+            try {
+                Thread.sleep(1000); // Attendre 1 seconde avant de vérifier à nouveau
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
