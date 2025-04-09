@@ -1,6 +1,6 @@
-package client;
+package client.UI;
 
-import client.UI.BaseView;
+import client.UI.Views.BaseView;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;

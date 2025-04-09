@@ -1,8 +1,9 @@
 package client;
 
-import client.UI.FormatView;
-import client.UI.ProtocolView;
-import client.UI.VideoView;
+import client.UI.Views.FormatView;
+import client.UI.Views.ProtocolView;
+import client.UI.StreamSettings;
+import client.UI.Views.VideoView;
 import shared.Video;
 import shared.ClientInfoPacket;
 import shared.Connected;

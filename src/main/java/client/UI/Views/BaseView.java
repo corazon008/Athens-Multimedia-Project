@@ -1,4 +1,4 @@
-package client.UI;
+package client.UI.Views;
 
 import javafx.scene.layout.VBox;
 

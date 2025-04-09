@@ -1,4 +1,4 @@
-package client.UI;
+package client.UI.Views;
 
 import client.UserSelection;
 import javafx.scene.control.Button;
