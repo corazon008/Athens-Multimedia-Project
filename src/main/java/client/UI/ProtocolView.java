@@ -1,14 +1,13 @@
 package client.UI;
 
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import shared.Enum.ProtocolType;
+import client.UserSelection;
 
-public class ProtocolView extends VBox {
-    public ProtocolView(double spacing) {
-        super(spacing);
+public class ProtocolView extends BaseView {
+    public ProtocolView(double spacing, Runnable onValidate) {
+        super(spacing, onValidate);
 
-        // Crée un groupe de boutons radio
         ToggleGroup group = new ToggleGroup();
 
         RadioButton udpButton = new RadioButton("UDP");
@@ -18,25 +17,18 @@ public class ProtocolView extends VBox {
 
         RadioButton tcpButton = new RadioButton("TCP");
         tcpButton.setToggleGroup(group);
+        tcpButton.setUserData(ProtocolType.TCP);
 
         RadioButton rtpButton = new RadioButton("RTP");
         rtpButton.setToggleGroup(group);
-
-        Label selectedLabel = new Label("No protocol selected");
-
-        // Gérer le changement de sélection
-        group.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            if (newToggle != null) {
-                RadioButton selected = (RadioButton) group.getSelectedToggle();
-                selectedLabel.setText("Protocol : " + selected.getText());
-            }
-        });
+        rtpButton.setUserData(ProtocolType.RTP);
 
         Button submitButton = new Button("Submit");
         submitButton.setOnAction(event -> {
-            group.getSelectedToggle();
+            UserSelection.protocol = (ProtocolType) group.getSelectedToggle().getUserData();
+            onValidate.run();
         });
 
-        this.getChildren().addAll(udpButton, tcpButton, rtpButton, selectedLabel, new Separator(), submitButton);
+        this.getChildren().addAll(udpButton, tcpButton, rtpButton, new Separator(), submitButton);
     }
 }

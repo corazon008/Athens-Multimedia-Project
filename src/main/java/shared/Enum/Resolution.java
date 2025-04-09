@@ -17,4 +17,21 @@ public enum Resolution {
     public String getLabel() {
         return label;
     }
+
+    public int getIntResolution() {
+        switch (this) {
+            case P240:
+                return 240;
+            case P360:
+                return 360;
+            case P480:
+                return 480;
+            case P720:
+                return 720;
+            case P1080:
+                return 1080;
+            default:
+                throw new IllegalArgumentException("Unknown resolution: " + this);
+        }
+    }
 }

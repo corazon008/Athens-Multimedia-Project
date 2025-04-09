@@ -1,41 +1,48 @@
 package client;
 
-import client.UI.FormatView;
-import client.UI.ProtocolView;
-import javafx.application.Application;
+import client.UI.BaseView;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
-
 import java.util.concurrent.CountDownLatch;
 
 public class StreamSettings {
-    private static CountDownLatch latch;
+    private static Stage stage;
+    private static JFXPanel jfxPanel;
+    private CountDownLatch latch;
 
-    public static void Show() {
+    public void Show(Class<? extends BaseView> viewClass) {
         latch = new CountDownLatch(1);
-
-        new JFXPanel(); // Initialise JavaFX si pas déjà lancé
+        if (jfxPanel == null) {
+            jfxPanel = new JFXPanel(); // Initialize the JavaFX environment
+        }
 
         Platform.runLater(() -> {
-            Stage stage = new Stage(StageStyle.DECORATED);
-            FormatView root = new FormatView(10, latch); // ⬅️ on passe le latch
+            try {
+                if (stage == null) {
+                    stage = new Stage(StageStyle.DECORATED);
+                    stage.initModality(Modality.APPLICATION_MODAL);
+                }
 
-            stage.setTitle("Choisissez vos paramètres");
-            stage.setScene(new Scene(root, 400, 300));
-            stage.initModality(Modality.APPLICATION_MODAL); // bloque jusqu'à fermeture
-            stage.show();
+                BaseView root = viewClass.getConstructor(double.class, Runnable.class).newInstance(10.0, (Runnable) () -> {
+                    //stage.close();
+                    latch.countDown();
+                });
+
+                stage.setTitle("Choose your settings");
+                stage.setScene(new Scene(root));
+                stage.show();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 
-    public static void Wait(){
+    public void Wait() {
         try {
             latch.await(); // Attend que l’utilisateur valide
         } catch (InterruptedException e) {
@@ -43,8 +50,18 @@ public class StreamSettings {
         }
     }
 
-    public static void main(String[] args) {
-        Show();
-        Wait();
+    public static void Close() {
+        if (stage != null) {
+            Platform.runLater(() -> {
+                stage.close();
+                stage = null;
+            });
+        }
+
+        if (jfxPanel != null) {
+            Platform.runLater(() -> {
+                jfxPanel = null;
+            });
+        }
     }
 }

@@ -9,43 +9,39 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import shared.ClientInfoPacket;
+import shared.*;
 import shared.Enum.ProtocolType;
 import shared.Enum.Resolution;
 import shared.Enum.VideoFormat;
-import shared.ServerInfo;
-import shared.SharedInfo;
 
-public class Server {
+public class Server extends Connected {
     private static Map<Integer, Resolution> bitrates = Map.of(400, Resolution.P240, 750, Resolution.P360, 1000, Resolution.P480, 2500, Resolution.P720, 4500, Resolution.P1080);
 
     public static void main(String[] args) throws Exception {
-        FfmpegMakeAllResAndFormat();
+        //FfmpegMakeAllResAndFormat();
+        //filterVideo(VideoFormat.MP4, Resolution.P480);
         try (ServerSocket serverSocket = new ServerSocket(ServerInfo.getListenSocketPort())) {
             System.out.println("Serveur en attente d'un client...");
             Socket clientSocket = serverSocket.accept();
             System.out.println("Client connecté.");
 
-            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
-            ClientInfoPacket clientInfoPacket = (ClientInfoPacket) ois.readObject();
+            ClientInfoPacket clientInfoPacket = (ClientInfoPacket) ReadObject(clientSocket);
 
-            List<Resolution> availableResolutions = getResolutions(clientInfoPacket.downloadSpeed);
+            Resolution highestResolution = getHighestResolutions(clientInfoPacket.downloadSpeed);
+            System.out.println("Highest resolution supported by client connection : " + highestResolution);
 
-            System.out.println(availableResolutions);
-
-            List<File> filteredFiles = filterVideo(clientInfoPacket.videoFormat, availableResolutions);
+            List<Video> filteredFiles = filterVideo(clientInfoPacket.videoFormat, highestResolution);
             System.out.println("Fichiers vidéo disponibles : " + filteredFiles);
 
-            // Envoyer la liste des fichiers vidéo au client
+            // Send video files to client
             SendObject(filteredFiles, clientSocket);
+
+            int videoIndex = (int) ReadObject(clientSocket);
+            System.out.println("Video selected by client : " + filteredFiles.get(videoIndex));
         }
     }
 
-    private static void SendObject(Object object, Socket socket) throws IOException {
-        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-        oos.writeObject(object);
-        oos.flush();
-    }
+
 
     private static String getStreamURl(ProtocolType protocol) {
         switch (protocol) {
@@ -60,34 +56,44 @@ public class Server {
         }
     }
 
-    private static List<Resolution> getResolutions(double downloadSpeed) {
-        List<Resolution> availableResolutions = new ArrayList<>();
+    private static Resolution getHighestResolutions(double downloadSpeed) {
+        Resolution highestRes = Resolution.P240;
         for (Map.Entry<Integer, Resolution> entry : bitrates.entrySet()) {
-            if (downloadSpeed >= entry.getKey()) {
-                availableResolutions.add(entry.getValue());
+            if (downloadSpeed >= entry.getKey() && entry.getValue().getIntResolution() > highestRes.getIntResolution()) {
+                highestRes = entry.getValue();
             }
         }
-        return availableResolutions;
+        return highestRes;
     }
 
     private static File[] getVideoFiles() {
         return new File("videos").listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
-                return pathname.isFile();
+                if (!pathname.isFile()) {
+                    return false;
+                }
+                String[] videoExtensions = {".mp4", ".avi", ".mkv"};
+                for (String extension : videoExtensions) {
+                    if (pathname.getName().toLowerCase().endsWith(extension)) {
+                        return true;
+                    }
+                }
+                return false;
             }
         });
     }
 
-    private static List<File> filterVideo(VideoFormat videoFormat, List<Resolution> l_resolutions) {
+    private static List<Video> filterVideo(VideoFormat videoFormat, Resolution highestRes) {
         File[] videoFiles = getVideoFiles();
-        List<File> filteredFiles = new ArrayList<>();
-        for (Resolution resolution : l_resolutions)
-            for (File file : videoFiles)
-                if (file.isFile() && file.getName().endsWith(videoFormat.toString().toLowerCase()) && file.getName().contains(resolution.getLabel()))
-                    filteredFiles.add(file);
+        List<Video> filteredVideos = new ArrayList<>();
+        for (File file : videoFiles) {
+            Video video = new Video(file);
+            if (video.getVideoFormat() == videoFormat && video.getIntResolution() <= highestRes.getIntResolution())
+                filteredVideos.add(video);
+        }
 
-        return filteredFiles;
+        return filteredVideos;
     }
 
     private static void FfmpegMakeAllResAndFormat() {
@@ -97,11 +103,10 @@ public class Server {
             boolean videoExists = false;
             for (Video t_video : highestResVideos) {
                 if (video.SameVideo(t_video)) {
-                    if (video.HaveHigherOrEqResolutionthan(t_video))
-                        if (video.HaveBetterFormatthan(t_video)) {
-                            highestResVideos.remove(t_video);
-                            highestResVideos.add(video);
-                        }
+                    if (video.HaveHigherOrEqResolutionthan(t_video)) if (video.HaveBetterFormatthan(t_video)) {
+                        highestResVideos.remove(t_video);
+                        highestResVideos.add(video);
+                    }
                     videoExists = true;
                     break;
                 }
@@ -109,17 +114,15 @@ public class Server {
             if (!videoExists) highestResVideos.add(video);
         }
 
-        ExecutorService executor = Executors.newFixedThreadPool(3); // max 4 transcodages en parallèle
+        ExecutorService executor = Executors.newFixedThreadPool(4); // max 4 transcodages en parallèle
 
         for (Video video : highestResVideos) {
             for (Resolution resolution : SharedInfo.getResolutions()) {
                 for (VideoFormat format : SharedInfo.getVideoFormats()) {
                     Video newVideo = video.getVideoWithNew(format, resolution);
-                    if (newVideo.HaveHigherResolutionthan(video))
-                        continue;
+                    if (newVideo.HaveHigherResolutionthan(video)) continue;
                     File newfile = new File(newVideo.getVideoPath());
-                    if (newfile.exists())
-                        continue;
+                    if (newfile.exists()) continue;
                     System.out.println(newfile.getPath());
 
                     // Submit task to thread pool
@@ -130,7 +133,7 @@ public class Server {
         executor.shutdown();
         while (!executor.isTerminated()) {
             try {
-                Thread.sleep(1000); // Attendre 1 seconde avant de vérifier à nouveau
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -138,17 +141,7 @@ public class Server {
     }
 
     private static void FfmpegTranscode(Video input, Video output) {
-        ProcessBuilder builder = new ProcessBuilder(
-                ServerInfo.getFfmpegPath(),
-                "-i", input.getVideoPath(),
-                "-c:v", output.getCodec(),
-                "-preset", "slow",
-                "-crf", output.getBitrateVariation(),
-                "-c:a", "aac",
-                "-b:a", "128k",
-                "-vf", String.format("scale=-2:%s", output.getIntResolution()),
-                output.getVideoPath()
-        );
+        ProcessBuilder builder = new ProcessBuilder(ServerInfo.getFfmpegPath(), "-i", input.getVideoPath(), "-c:v", output.getCodec(), "-preset", "slow", "-crf", output.getBitrateVariation(), "-c:a", "aac", "-b:a", "128k", "-vf", String.format("scale=-2:%s", output.getIntResolution()), output.getVideoPath());
 
         System.out.println(builder.command());
 

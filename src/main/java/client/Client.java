@@ -1,63 +1,55 @@
 package client;
 
+import client.UI.FormatView;
+import client.UI.ProtocolView;
+import client.UI.VideoView;
+import shared.Video;
 import shared.ClientInfoPacket;
+import shared.Connected;
 import shared.ServerInfo;
-import shared.Enum.VideoFormat;
-import shared.UserSelection;
 
-import java.io.*;
 import java.net.*;
 import java.util.List;
 
-public class Client {
+public class Client extends Connected {
     public static void main(String[] args) throws InterruptedException {
         SpeedTest speedTest = new SpeedTest(5000);
         speedTest.StartSpeedTest();
 
-        StreamSettings.Show();
+        StreamSettings formatView = new StreamSettings();
+        formatView.Show(FormatView.class);
 
         speedTest.WaitForSpeedTest();
         double downloadSpeed = speedTest.getDownloadSpeed().doubleValue() / 1_000; // Convert in Kbps
         System.out.println("Vitesse de téléchargement : " + downloadSpeed + " Kbps");
 
-        StreamSettings.Wait();
+        formatView.Wait();
         System.out.println("Format sélectionné : " + UserSelection.format);
         try (Socket socket = new Socket(ServerInfo.getListenSocketIP(), ServerInfo.getListenSocketPort())) {
 
             ClientInfoPacket clientInfo = new ClientInfoPacket(downloadSpeed, UserSelection.format);
             SendObject(clientInfo, socket);
 
-            List<File> films = (List<File>) new ObjectInputStream(socket.getInputStream()).readObject();
-            System.out.println("Films disponibles : " + films);
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+            UserSelection.videosAvailable = (List<Video>) ReadObject(socket);
+            System.out.println("Videos available for you : " + UserSelection.videosAvailable);
 
-    public static void main1(String[] args) {
-        try (Socket socket = new Socket(ServerInfo.getListenSocketIP(), ServerInfo.getListenSocketPort())) {
-            ClientInfoPacket clientInfo = new ClientInfoPacket(1000, VideoFormat.MP4);
+            StreamSettings protocolView = new StreamSettings();
+            protocolView.Show(ProtocolView.class);
+            protocolView.Wait();
 
-            SendObject(clientInfo, socket);
+            StreamSettings videoView = new StreamSettings();
+            videoView.Show(VideoView.class);
+            videoView.Wait();
 
-            // Lire l'URL du flux envoyé par le serveur
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            String streamUrl = reader.readLine().trim();
-            System.out.println("Le serveur envoie le stream à : " + streamUrl);
 
-            // Lancer JavaFX pour afficher la vidéo
-            ClientFX.startApp(streamUrl);
+            StreamSettings.Close();
+
+            SendObject(UserSelection.selectedVideoIndex, socket);
 
         } catch (Exception e) {
             e.printStackTrace();
+            StreamSettings.Close();
         }
-
-    }
-
-    private static void SendObject(Object object, Socket socket) throws IOException {
-        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-        oos.writeObject(object);
-        oos.flush();
     }
 }
 

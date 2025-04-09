@@ -1,15 +1,13 @@
-package server;
+package shared;
 
 import shared.Enum.Resolution;
 import shared.Enum.VideoFormat;
-import shared.SharedInfo;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
+import java.io.Serializable;
 import java.util.Map;
 
-public class Video implements Cloneable {
+public class Video implements Cloneable, Serializable {
     private static Map<Resolution, Integer> bitrates = Map.of(Resolution.P240, 400, Resolution.P360, 750, Resolution.P480, 1000, Resolution.P720, 2500, Resolution.P1080, 4500);
 
     private Resolution resolution;
@@ -22,20 +20,18 @@ public class Video implements Cloneable {
 
         // Set VideoFormat
         for (VideoFormat videoFormat : SharedInfo.getVideoFormats()) {
-            if (file.getName().endsWith(videoFormat.toString().toLowerCase())) {
+            if (file.getName().toLowerCase().endsWith(videoFormat.getLabel())) {
                 this.videoFormat = videoFormat;
                 break;
             }
         }
 
         //Set Resolution
-        for (Resolution res : SharedInfo.getResolutions()) {
+        for (Resolution res : SharedInfo.getResolutions())
             if (file.getName().contains(res.getLabel())) {
                 resolution = res;
-
                 break;
             }
-        }
 
         //Set VideoName
         int indexOfRes = file.getName().indexOf(resolution.getLabel());
@@ -70,7 +66,7 @@ public class Video implements Cloneable {
     }
 
     public int getIntResolution() {
-        return Integer.parseInt(resolution.getLabel().replace("p", ""));
+        return resolution.getIntResolution();
     }
 
     public Resolution getResolution() {
