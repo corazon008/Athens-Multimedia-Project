@@ -16,7 +16,7 @@ public class FormatView extends BaseView {
 
         RadioButton mp4Button = new RadioButton("MP4");
         mp4Button.setToggleGroup(group);
-        aviButton.setSelected(true);
+        mp4Button.setSelected(true);
         mp4Button.setUserData(VideoFormat.MP4);
 
         RadioButton mkvButton = new RadioButton("MKV");
