@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import shared.*;
 import shared.Enum.ProtocolType;
@@ -17,30 +18,92 @@ import shared.Enum.VideoFormat;
 public class Server extends Connected {
     private static Map<Integer, Resolution> bitrates = Map.of(400, Resolution.P240, 750, Resolution.P360, 1000, Resolution.P480, 2500, Resolution.P720, 4500, Resolution.P1080);
 
+    private static Process ffmpegProcess;
+
     public static void main(String[] args) throws Exception {
         //FfmpegMakeAllResAndFormat();
         //filterVideo(VideoFormat.MP4, Resolution.P480);
         try (ServerSocket serverSocket = new ServerSocket(ServerInfo.getListenSocketPort())) {
-            System.out.println("Serveur en attente d'un client...");
+            System.out.println("Server started on port " + ServerInfo.getListenSocketPort());
+            System.out.println("Waiting for client connection...");
             Socket clientSocket = serverSocket.accept();
-            System.out.println("Client connecté.");
+            System.out.println("Client connected.");
 
             ClientInfoPacket clientInfoPacket = (ClientInfoPacket) ReadObject(clientSocket);
 
             Resolution highestResolution = getHighestResolutions(clientInfoPacket.downloadSpeed);
             System.out.println("Highest resolution supported by client connection : " + highestResolution);
 
-            List<Video> filteredFiles = filterVideo(clientInfoPacket.videoFormat, highestResolution);
-            System.out.println("Fichiers vidéo disponibles : " + filteredFiles);
+            List<Video> filteredVideos = filterVideo(clientInfoPacket.videoFormat, highestResolution);
+            System.out.println("Video filtered : " + filteredVideos);
 
             // Send video files to client
-            SendObject(filteredFiles, clientSocket);
+            SendObject(filteredVideos, clientSocket);
+
+            ProtocolType protocol = (ProtocolType) ReadObject(clientSocket);
+            System.out.println("Protocol selected by client : " + protocol);
 
             int videoIndex = (int) ReadObject(clientSocket);
-            System.out.println("Video selected by client : " + filteredFiles.get(videoIndex));
+            System.out.println("Video selected by client : " + filteredVideos.get(videoIndex));
+
+            SendObject(getStreamURl(protocol), clientSocket);
+
+            System.out.println("Waiting client to be ready...");
+            while (true) {
+                Object object = ReadObject(clientSocket);
+                if (object instanceof String && object.equals("start")) {
+                    System.out.println("Starting stream...");
+                    BeginStream(protocol, filteredVideos.get(videoIndex));
+                    break;
+                }
+            }
+
+            //Stop Server
+            try {
+                while (true) {
+                    Object object = ReadObject(clientSocket);
+                    if (object instanceof String && object.equals("stop")) {
+                        System.out.println("Stopping stream...");
+                        stopStream();
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
+    private static void BeginStream(ProtocolType protocol, Video video) {
+        ProcessBuilder builder = new ProcessBuilder(ServerInfo.getFfmpegPath(), "-re", // Real-time streaming
+                "-i", video.getVideoPath(), "-f", "mpegts", getStreamURl(protocol));
+
+        builder.inheritIO();
+        try {
+            ffmpegProcess = builder.start();
+            //ffmpegProcess.waitFor();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void stopStream() {
+        if (ffmpegProcess != null && ffmpegProcess.isAlive()) {
+            System.out.println("Stopping ffmpeg process...");
+            ffmpegProcess.destroy(); // envoie SIGTERM
+
+            try {
+                // Attend un peu pour voir s’il s’arrête gentiment
+                if (!ffmpegProcess.waitFor(2, TimeUnit.SECONDS)) {
+                    System.out.println("Forcing ffmpeg to stop...");
+                    ffmpegProcess.destroyForcibly(); // envoie SIGKILL
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 
     private static String getStreamURl(ProtocolType protocol) {
@@ -73,9 +136,8 @@ public class Server extends Connected {
                 if (!pathname.isFile()) {
                     return false;
                 }
-                String[] videoExtensions = {".mp4", ".avi", ".mkv"};
-                for (String extension : videoExtensions) {
-                    if (pathname.getName().toLowerCase().endsWith(extension)) {
+                for (VideoFormat extension : SharedInfo.getVideoFormats()) {
+                    if (pathname.getName().toLowerCase().endsWith(extension.getLabel())) {
                         return true;
                     }
                 }

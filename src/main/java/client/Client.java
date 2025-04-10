@@ -1,30 +1,33 @@
 package client;
 
+import client.UI.FXManager;
 import client.UI.Views.FormatView;
 import client.UI.Views.ProtocolView;
-import client.UI.StreamSettings;
 import client.UI.Views.VideoView;
 import shared.Video;
 import shared.ClientInfoPacket;
 import shared.Connected;
 import shared.ServerInfo;
 
+import java.io.IOException;
 import java.net.*;
 import java.util.List;
 
 public class Client extends Connected {
     public static void main(String[] args) throws InterruptedException {
+
+        FXManager.StartApp();
+        FXManager.SetStreamSettingsView(FormatView.class);
+
         SpeedTest speedTest = new SpeedTest(5000);
         speedTest.StartSpeedTest();
 
-        StreamSettings formatView = new StreamSettings();
-        formatView.Show(FormatView.class);
 
         speedTest.WaitForSpeedTest();
         double downloadSpeed = speedTest.getDownloadSpeed().doubleValue() / 1_000; // Convert in Kbps
         System.out.println("Vitesse de téléchargement : " + downloadSpeed + " Kbps");
 
-        formatView.Wait();
+        FXManager.WaitCurrentView();
         System.out.println("Format sélectionné : " + UserSelection.format);
         try (Socket socket = new Socket(ServerInfo.getListenSocketIP(), ServerInfo.getListenSocketPort())) {
 
@@ -34,23 +37,45 @@ public class Client extends Connected {
             UserSelection.videosAvailable = (List<Video>) ReadObject(socket);
             System.out.println("Videos available for you : " + UserSelection.videosAvailable);
 
-            StreamSettings protocolView = new StreamSettings();
-            protocolView.Show(ProtocolView.class);
-            protocolView.Wait();
+            FXManager.SetStreamSettingsView(ProtocolView.class);
+            FXManager.WaitCurrentView();
+            SendObject(UserSelection.protocol, socket);
 
-            StreamSettings videoView = new StreamSettings();
-            videoView.Show(VideoView.class);
-            videoView.Wait();
-
-
-            StreamSettings.Close();
-
+            FXManager.SetStreamSettingsView(VideoView.class);
+            FXManager.WaitCurrentView();
             SendObject(UserSelection.selectedVideoIndex, socket);
+
+            String streamUrl = (String) ReadObject(socket);
+            System.out.println("Stream URL : " + streamUrl);
+
+            Runnable stopServer = () -> {
+                try {
+                    if (!socket.isClosed()) {
+                        SendObject("stop", socket);
+                        System.out.println("Sending stop signal to server...");
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            };
+
+            Runnable startServer = () -> {
+                try {
+                    if (!socket.isClosed()) {
+                        SendObject("start", socket);
+                        System.out.println("Sending start signal to server...");
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            };
+
+            FXManager.StartStreamView(streamUrl, startServer, stopServer);
+
+            FXManager.WaitCurrentView();
 
         } catch (Exception e) {
             e.printStackTrace();
-            StreamSettings.Close();
         }
     }
 }
-
