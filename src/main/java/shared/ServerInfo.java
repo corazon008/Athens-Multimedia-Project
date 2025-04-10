@@ -3,27 +3,22 @@ package shared;
 public class ServerInfo {
     private static String listenSocketIP = "localhost";
     private static int listenSocketPort = 5000;
-    private static String ffmpegPath = "ffmpeg-win\\bin\\ffmpeg.exe";
     private static String ffmpegListenSocketIP = "localhost";
     private static int ffmpegPort = 5001;
 
-    public static String getListenSocketIP() {
+    public static String GetListenSocketIP() {
         return listenSocketIP;
     }
 
-    public static int getListenSocketPort() {
+    public static int GetListenSocketPort() {
         return listenSocketPort;
     }
 
-    public static String getFfmpegPath() {
-        return ffmpegPath;
-    }
-
-    public static String getFfmpegListenSocketIP() {
+    public static String GetFfmpegListenSocketIP() {
         return ffmpegListenSocketIP;
     }
 
-    public static int getFfmpegPort() {
+    public static int GetFfmpegPort() {
         return ffmpegPort;
     }
 }

@@ -17,12 +17,7 @@ public class StreamSettings extends Scene {
 
     private void InitUI(Class<? extends BaseView> viewClass) {
         try {
-
-            BaseView root = viewClass.getConstructor(double.class, Runnable.class).newInstance(10.0, (Runnable) () -> {
-                //stage.close();
-                latch.countDown();
-            });
-
+            BaseView root = viewClass.getConstructor(double.class, Runnable.class).newInstance(10.0, (Runnable) () -> latch.countDown());
             super.setRoot(root);
 
         } catch (Exception e) {

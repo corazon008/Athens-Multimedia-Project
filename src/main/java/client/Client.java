@@ -29,7 +29,7 @@ public class Client extends Connected {
 
         FXManager.WaitCurrentView();
         System.out.println("Format sélectionné : " + UserSelection.format);
-        try (Socket socket = new Socket(ServerInfo.getListenSocketIP(), ServerInfo.getListenSocketPort())) {
+        try (Socket socket = new Socket(ServerInfo.GetListenSocketIP(), ServerInfo.GetListenSocketPort())) {
 
             ClientInfoPacket clientInfo = new ClientInfoPacket(downloadSpeed, UserSelection.format);
             SendObject(clientInfo, socket);

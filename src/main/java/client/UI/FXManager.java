@@ -52,6 +52,7 @@ public class FXManager extends Application {
             primaryStage.setOnCloseRequest(event -> {
                 System.out.println("Closing stream");
                 onClose.run();
+                primaryStage.close();
                 stream.Stop();
                 currentViewLatch.countDown();
             });

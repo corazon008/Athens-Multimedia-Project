@@ -19,7 +19,7 @@ public class Stream extends Scene {
     private FFmpegFrameGrabber grabber;
 
     public Stream(String url, Runnable onStart) {
-        super(new StackPane(), 800, 600);
+        super(new StackPane(), 1280, 720);
         this.streamUrl = url;
         this.onStartCallback = onStart;
         InitUI();
@@ -59,8 +59,7 @@ public class Stream extends Scene {
         } finally {
             if (grabber != null) {
                 try {
-                    grabber.stop();
-                    grabber.release();
+                    grabber.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -71,8 +70,7 @@ public class Stream extends Scene {
     public void Stop() {
         if (grabber != null) {
             try {
-                grabber.stop();
-                grabber.release();
+                grabber.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
