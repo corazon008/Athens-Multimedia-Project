@@ -38,13 +38,13 @@ public class Server extends Connected {
             // Send video files to client
             SendObject(filteredVideos, clientSocket);
 
-            ProtocolType protocol = (ProtocolType) ReadObject(clientSocket);
-            System.out.println("Protocol selected by client : " + protocol);
-
             int videoIndex = (int) ReadObject(clientSocket);
             System.out.println("Video selected by client : " + filteredVideos.get(videoIndex));
 
-            System.out.println("Waiting client to be ready...");
+            ProtocolType protocol = (ProtocolType) ReadObject(clientSocket);
+            System.out.println("Protocol selected by client : " + protocol);
+
+            logger.info("Waiting client to be ready...");
             while (true) {
                 Object object = ReadObject(clientSocket);
                 if (object instanceof String && object.equals("start")) {
@@ -56,17 +56,13 @@ public class Server extends Connected {
             }
 
             //Stop Server
-            try {
-                while (true) {
-                    Object object = ReadObject(clientSocket);
-                    if (object instanceof String && object.equals("stop")) {
-                        System.out.println("Stopping stream...");
-                        FfmpegHandler.StopStream();
-                        break;
-                    }
+            while (true) {
+                Object object = ReadObject(clientSocket);
+                if (object instanceof String && object.equals("stop")) {
+                    System.out.println("Stopping stream...");
+                    FfmpegHandler.StopStream();
+                    break;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
 
         }
@@ -109,6 +105,6 @@ public class Server extends Connected {
         }
         return filteredVideos;
     }
-    
-    
+
+
 }

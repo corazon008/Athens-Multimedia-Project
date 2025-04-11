@@ -3,9 +3,11 @@ package client;
 import client.UI.FXManager;
 import client.UI.Views.FormatView;
 import client.UI.Views.ProtocolView;
-import client.UI.Views.VideoView;
+import client.UI.Views.ChooseVideoView;
 import shared.*;
 import shared.Enum.EndpointType;
+import shared.Enum.ProtocolType;
+import shared.Enum.Resolution;
 
 import java.io.IOException;
 import java.net.*;
@@ -37,13 +39,13 @@ public class Client extends Connected {
             UserSelection.videosAvailable = (List<Video>) ReadObject(socket);
             System.out.println("Videos available for you : " + UserSelection.videosAvailable);
 
+            FXManager.SetStreamSettingsView(ChooseVideoView.class);
+            FXManager.WaitCurrentView();
+            SendObject(UserSelection.selectedVideoIndex, socket);
+
             FXManager.SetStreamSettingsView(ProtocolView.class);
             FXManager.WaitCurrentView();
             SendObject(UserSelection.protocol, socket);
-
-            FXManager.SetStreamSettingsView(VideoView.class);
-            FXManager.WaitCurrentView();
-            SendObject(UserSelection.selectedVideoIndex, socket);
 
             String streamUrl = SharedInfo.GetStreamUrl(UserSelection.protocol, EndpointType.CLIENT);
             System.out.println("Stream URL : " + streamUrl);
@@ -76,5 +78,16 @@ public class Client extends Connected {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static ProtocolType ChooseProtocolAuto(Resolution resolution) {
+        if (resolution == Resolution.P240)
+            return ProtocolType.TCP;
+        else if (resolution == Resolution.P480 || resolution == Resolution.P720)
+            return ProtocolType.UDP;
+        else if (resolution == Resolution.P1080)
+            return ProtocolType.RTP;
+        else
+            return ProtocolType.TCP;
     }
 }

@@ -1,5 +1,6 @@
 package client.UI.Views;
 
+import client.Client;
 import javafx.scene.control.*;
 import shared.Enum.ProtocolType;
 import client.UserSelection;
@@ -12,7 +13,7 @@ public class ProtocolView extends BaseView {
 
         RadioButton udpButton = new RadioButton("UDP");
         udpButton.setToggleGroup(group);
-        udpButton.setSelected(true);
+        //udpButton.setSelected(true);
         udpButton.setUserData(ProtocolType.UDP);
 
         RadioButton tcpButton = new RadioButton("TCP");
@@ -25,7 +26,11 @@ public class ProtocolView extends BaseView {
 
         Button submitButton = new Button("Submit");
         submitButton.setOnAction(event -> {
-            UserSelection.protocol = (ProtocolType) group.getSelectedToggle().getUserData();
+            if (group.getSelectedToggle() == null) {
+                UserSelection.protocol = Client.ChooseProtocolAuto(UserSelection.videosAvailable.get(UserSelection.selectedVideoIndex).getResolution());
+            }else {
+                UserSelection.protocol = (ProtocolType) group.getSelectedToggle().getUserData();
+            }
             onValidate.run();
         });
 

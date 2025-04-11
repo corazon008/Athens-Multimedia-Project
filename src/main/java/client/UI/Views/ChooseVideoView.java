@@ -6,8 +6,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleGroup;
 
-public class VideoView extends BaseView {
-    public VideoView(double spacing, Runnable onValidate) {
+public class ChooseVideoView extends BaseView {
+    public ChooseVideoView(double spacing, Runnable onValidate) {
         super(spacing, onValidate);
 
         ToggleGroup group = new ToggleGroup();
