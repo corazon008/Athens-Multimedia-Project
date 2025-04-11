@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import shared.*;
 import shared.Enum.ProtocolType;
@@ -15,16 +16,16 @@ import shared.Enum.VideoFormat;
 public class Server extends Connected {
     private static Map<Integer, Resolution> bitrates = Map.of(400, Resolution.P240, 750, Resolution.P360, 1000, Resolution.P480, 2500, Resolution.P720, 4500, Resolution.P1080);
 
-    private static Process ffmpegProcess;
+    private static Logger logger = Logger.getLogger("Server");
 
     public static void main(String[] args) throws Exception {
         //FfmpegHandler.FfmpegMakeAllResAndFormat();
         //filterVideo(VideoFormat.MP4, Resolution.P480);
-        try (ServerSocket serverSocket = new ServerSocket(ServerInfo.GetListenSocketPort())) {
-            System.out.println("Server started on port " + ServerInfo.GetListenSocketPort());
-            System.out.println("Waiting for client connection...");
+        try (ServerSocket serverSocket = new ServerSocket(ServerInfo.serverSocketPort)) {
+            logger.info("Server started on port " + ServerInfo.serverSocketPort);
+            logger.info("Waiting for connection...");
             Socket clientSocket = serverSocket.accept();
-            System.out.println("Client connected.");
+            logger.info("Client connected : " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
 
             ClientInfoPacket clientInfoPacket = (ClientInfoPacket) ReadObject(clientSocket);
 
@@ -43,13 +44,12 @@ public class Server extends Connected {
             int videoIndex = (int) ReadObject(clientSocket);
             System.out.println("Video selected by client : " + filteredVideos.get(videoIndex));
 
-            SendObject(FfmpegHandler.GetStreamURl(protocol), clientSocket);
-
             System.out.println("Waiting client to be ready...");
             while (true) {
                 Object object = ReadObject(clientSocket);
                 if (object instanceof String && object.equals("start")) {
-                    System.out.println("Starting stream...");
+                    logger.info("Client is ready to start streaming");
+                    logger.info("Starting stream...");
                     FfmpegHandler.BeginStream(protocol, filteredVideos.get(videoIndex));
                     break;
                 }

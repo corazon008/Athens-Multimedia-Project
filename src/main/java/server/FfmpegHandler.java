@@ -1,5 +1,6 @@
 package server;
 
+import shared.Enum.EndpointType;
 import shared.Enum.ProtocolType;
 import shared.Enum.Resolution;
 import shared.Enum.VideoFormat;
@@ -21,8 +22,8 @@ public class FfmpegHandler {
     private static String ffmpegPath = "ffmpeg-win\\bin\\ffmpeg.exe";
 
     public static void BeginStream(ProtocolType protocol, Video video) {
-        ProcessBuilder builder = new ProcessBuilder( ffmpegPath, "-re", // Real-time streaming
-                "-i", video.getVideoPath(), "-f", "mpegts", GetStreamURl(protocol));
+        ProcessBuilder builder = new ProcessBuilder(ffmpegPath, "-re", // Real-time streaming
+                "-i", video.getVideoPath(), "-f", "mpegts", SharedInfo.GetStreamUrl(protocol, EndpointType.SERVER));
 
         builder.inheritIO();
         try {
@@ -47,19 +48,6 @@ public class FfmpegHandler {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public static String GetStreamURl(ProtocolType protocol) {
-        switch (protocol) {
-            case UDP:
-                return String.format("udp://%s:%d", ServerInfo.GetFfmpegListenSocketIP(), ServerInfo.GetFfmpegPort());
-            case TCP:
-                return String.format("tcp://%s:%d", ServerInfo.GetFfmpegListenSocketIP(), ServerInfo.GetFfmpegPort());
-            case RTP:
-                return String.format("rtp://%s:%d", ServerInfo.GetFfmpegListenSocketIP(), ServerInfo.GetFfmpegPort());
-            default:
-                return String.format("udp://%s:%d", ServerInfo.GetFfmpegListenSocketIP(), ServerInfo.GetFfmpegPort());
         }
     }
 

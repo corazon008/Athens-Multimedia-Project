@@ -6,10 +6,11 @@ import client.UI.Views.BaseView;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.Logger;
 
 public class FXManager extends Application {
+    private static Logger logger = Logger.getLogger("FXManager");
 
     private static Stage primaryStage;
     private static CountDownLatch startupLatch;
@@ -18,6 +19,7 @@ public class FXManager extends Application {
     public static void StartApp() {
         startupLatch = new CountDownLatch(1);
         new Thread(()->{
+            logger.info("Starting Application UI...");
             launch();
         }).start();
     }
@@ -45,6 +47,7 @@ public class FXManager extends Application {
         }
         currentViewLatch = new CountDownLatch(1);
         Platform.runLater(() -> {
+            logger.info("Starting Stream View...");
             Stream stream = new Stream(url, onStart);
             primaryStage.setScene(stream);
             primaryStage.show();
@@ -66,7 +69,6 @@ public class FXManager extends Application {
     @Override
     public void start(Stage primaryStage) {
         FXManager.primaryStage = primaryStage;
-        // Initialize the JavaFX application
         primaryStage.setTitle("Video Player");
         primaryStage.show();
         startupLatch.countDown();
