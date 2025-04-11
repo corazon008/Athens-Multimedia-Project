@@ -27,7 +27,7 @@ public class Client extends Connected {
         speedTest.WaitForSpeedTest();
 
         double downloadSpeed = speedTest.getDownloadSpeed().doubleValue() / 1_000; // Convert in Kbps
-        System.out.println("Vitesse de téléchargement : " + downloadSpeed + " Kbps");
+        System.out.println("Download speed : " + downloadSpeed + " Kbps");
 
         FXManager.WaitCurrentView();
         System.out.println("Format sélectionné : " + UserSelection.format);

@@ -22,8 +22,18 @@ public class FfmpegHandler {
     private static String ffmpegPath = "ffmpeg-win\\bin\\ffmpeg.exe";
 
     public static void BeginStream(ProtocolType protocol, Video video) {
-        ProcessBuilder builder = new ProcessBuilder(ffmpegPath, "-re", // Real-time streaming
-                "-i", video.getVideoPath(), "-f", "mpegts", SharedInfo.GetStreamUrl(protocol, EndpointType.SERVER));
+        ProcessBuilder builder;
+        if (protocol != ProtocolType.RTP)
+            builder = new ProcessBuilder(ffmpegPath, "-re",
+                    "-i", video.getVideoPath(),
+                    "-f", "mpegts",
+                    SharedInfo.GetStreamUrl(protocol, EndpointType.SERVER));
+        else
+            builder = new ProcessBuilder(ffmpegPath, "-re",
+                    "-i", video.getVideoPath(),
+                    "-f", "rtp",
+                    SharedInfo.GetStreamUrl(protocol, EndpointType.SERVER));
+
 
         builder.inheritIO();
         try {
@@ -37,13 +47,12 @@ public class FfmpegHandler {
     public static void StopStream() {
         if (ffmpegProcess != null && ffmpegProcess.isAlive()) {
             System.out.println("Stopping ffmpeg process...");
-            ffmpegProcess.destroy(); // envoie SIGTERM
+            ffmpegProcess.destroy();
 
             try {
-                // Attend un peu pour voir s’il s’arrête gentiment
                 if (!ffmpegProcess.waitFor(2, TimeUnit.SECONDS)) {
                     System.out.println("Forcing ffmpeg to stop...");
-                    ffmpegProcess.destroyForcibly(); // envoie SIGKILL
+                    ffmpegProcess.destroyForcibly();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

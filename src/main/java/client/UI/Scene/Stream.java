@@ -57,20 +57,16 @@ public class Stream extends Scene {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (grabber != null) {
-                try {
-                    grabber.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            Stop();
         }
     }
 
     public void Stop() {
         if (grabber != null) {
             try {
+                System.out.println("Stopping streaming...");
                 grabber.close();
+                System.out.println("Stopped streaming.");
             } catch (Exception e) {
                 e.printStackTrace();
             }

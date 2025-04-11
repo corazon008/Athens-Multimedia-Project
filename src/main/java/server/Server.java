@@ -17,6 +17,7 @@ public class Server extends Connected {
     private static Map<Integer, Resolution> bitrates = Map.of(400, Resolution.P240, 750, Resolution.P360, 1000, Resolution.P480, 2500, Resolution.P720, 4500, Resolution.P1080);
 
     private static Logger logger = Logger.getLogger("Server");
+    public static String clientIP;
 
     public static void main(String[] args) throws Exception {
         //FfmpegHandler.FfmpegMakeAllResAndFormat();
@@ -25,6 +26,7 @@ public class Server extends Connected {
             logger.info("Server started on port " + ServerInfo.serverSocketPort);
             logger.info("Waiting for connection...");
             Socket clientSocket = serverSocket.accept();
+            clientIP = clientSocket.getInetAddress().getHostAddress();
             logger.info("Client connected : " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
 
             ClientInfoPacket clientInfoPacket = (ClientInfoPacket) ReadObject(clientSocket);
@@ -44,6 +46,15 @@ public class Server extends Connected {
             ProtocolType protocol = (ProtocolType) ReadObject(clientSocket);
             System.out.println("Protocol selected by client : " + protocol);
 
+            Runnable rtpSendSdpFile = () -> {
+                try {
+                    if (!clientSocket.isClosed()) {
+                        //TODO
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            };
             logger.info("Waiting client to be ready...");
             while (true) {
                 Object object = ReadObject(clientSocket);
