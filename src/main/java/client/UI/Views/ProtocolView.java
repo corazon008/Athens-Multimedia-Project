@@ -5,6 +5,9 @@ import javafx.scene.control.*;
 import shared.Enum.ProtocolType;
 import client.UserSelection;
 
+/**
+ * ProtocolView is a class that extends BaseView and represents a view for selecting the protocol.
+ */
 public class ProtocolView extends BaseView {
     public ProtocolView(double spacing, Runnable onValidate) {
         super(spacing, onValidate);

@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Map;
 
+/**
+ * The Video class represents a video file with its properties such as resolution, format, name, and path.
+ */
 public class Video implements Cloneable, Serializable {
     private static Map<Resolution, Integer> averageBitrates = Map.of(Resolution.P240, 400, Resolution.P360, 750, Resolution.P480, 1000, Resolution.P720, 2500, Resolution.P1080, 4500);
     private static Map<Resolution, Integer> minBitrates = Map.of(Resolution.P240, 300, Resolution.P360, 400, Resolution.P480, 500, Resolution.P720, 1500, Resolution.P1080, 3000);

@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
+/**
+ * FXManager is a class that manages the JavaFX application lifecycle and UI.
+ */
 public class FXManager extends Application {
     private static Logger logger = Logger.getLogger("FXManager");
     private static String ffplayPath = "ffmpeg-win\\bin\\ffplay.exe";

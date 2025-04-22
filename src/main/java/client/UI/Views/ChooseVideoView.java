@@ -6,6 +6,9 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleGroup;
 
+/**
+ * ChooseVideoView is a class that extends BaseView and represents a view for selecting a video.
+ */
 public class ChooseVideoView extends BaseView {
     public ChooseVideoView(double spacing, Runnable onValidate) {
         super(spacing, onValidate);

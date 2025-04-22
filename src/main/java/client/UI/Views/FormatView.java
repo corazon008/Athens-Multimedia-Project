@@ -4,6 +4,9 @@ import javafx.scene.control.*;
 import client.UserSelection;
 import shared.Enum.VideoFormat;
 
+/**
+ * FormatView is a class that extends BaseView and represents a view for selecting the video format.
+ */
 public class FormatView extends BaseView {
     public FormatView(double spacing, Runnable onValidate) {
         super(spacing, onValidate);

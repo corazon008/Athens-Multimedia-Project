@@ -8,6 +8,11 @@ import shared.Enum.VideoFormat;
 
 import java.util.List;
 
+/**
+ * SharedInfo class provides shared information and utility methods for the application.
+ * It contains lists of supported resolutions, video formats, and protocol types.
+ * It also provides a method to generate stream URLs based on the selected protocol and endpoint type.
+ */
 public class SharedInfo {
     private static List<Resolution> resolutions = List.of(Resolution.P240, Resolution.P360, Resolution.P480, Resolution.P720, Resolution.P1080);
 

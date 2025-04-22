@@ -16,6 +16,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Handles the ffmpeg process for transcoding and streaming video files.
+ */
 public class FfmpegHandler {
     private static Process ffmpegProcess;
     private static String ffmpegPath = "ffmpeg-win\\bin\\ffmpeg.exe";

@@ -6,6 +6,9 @@ import javafx.scene.layout.VBox;
 
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * Class that inherit from Scene and display the stream settings view
+ */
 public class StreamSettings extends Scene {
     private CountDownLatch latch;
 
