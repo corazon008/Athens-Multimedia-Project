@@ -2,9 +2,9 @@ package server;
 
 import shared.Enum.EndpointType;
 import shared.Enum.ProtocolType;
+import server.Enum.RTPStreamType;
 import shared.Enum.Resolution;
 import shared.Enum.VideoFormat;
-import shared.ServerInfo;
 import shared.SharedInfo;
 import shared.Video;
 
@@ -20,19 +20,33 @@ import java.util.concurrent.TimeUnit;
 public class FfmpegHandler {
     private static Process ffmpegProcess;
     private static String ffmpegPath = "ffmpeg-win\\bin\\ffmpeg.exe";
+    private static File workingDirectory = new File("tmp\\server");
 
-    public static void BeginStream(ProtocolType protocol, Video video) {
+    public static void BeginStream(ProtocolType protocol, Video video, Runnable rtpSendSdpFile) {
+        if ((new File("stream.sdp")).exists()) {
+            new File("stream.sdp").delete();
+        }
         ProcessBuilder builder;
         if (protocol != ProtocolType.RTP)
             builder = new ProcessBuilder(ffmpegPath, "-re",
                     "-i", video.getVideoPath(),
                     "-f", "mpegts",
                     SharedInfo.GetStreamUrl(protocol, EndpointType.SERVER));
-        else
+        else {
             builder = new ProcessBuilder(ffmpegPath, "-re",
                     "-i", video.getVideoPath(),
-                    "-f", "rtp",
-                    SharedInfo.GetStreamUrl(protocol, EndpointType.SERVER));
+                    "-map", "0:v", "-c:v", "copy", "-s", "2592x1080", "-f", "rtp", SharedInfo.GetStreamUrl(protocol, EndpointType.SERVER, RTPStreamType.VIDEO),
+                    "-map", "0:a", "-c:a", "copy", "-f", "rtp", SharedInfo.GetStreamUrl(protocol, EndpointType.SERVER, RTPStreamType.AUDIO),
+                    "-sdp_file", "stream.sdp");
+            while (!new File("stream.sdp").exists()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            rtpSendSdpFile.run();
+        }
 
 
         builder.inheritIO();
@@ -101,9 +115,11 @@ public class FfmpegHandler {
             for (Resolution resolution : SharedInfo.getResolutions()) {
                 for (VideoFormat format : SharedInfo.getVideoFormats()) {
                     Video newVideo = video.getVideoWithNew(format, resolution);
-                    if (newVideo.HaveHigherResolutionthan(video)) continue;
+                    if (newVideo.HaveHigherResolutionthan(video))
+                        continue;
                     File newfile = new File(newVideo.getVideoPath());
-                    if (newfile.exists()) continue;
+                    if (newfile.exists())
+                        continue;
                     System.out.println(newfile.getPath());
 
                     // Submit task to thread pool
@@ -122,7 +138,11 @@ public class FfmpegHandler {
     }
 
     private static void FfmpegTranscode(Video input, Video output) {
-        ProcessBuilder builder = new ProcessBuilder(ffmpegPath, "-i", input.getVideoPath(), "-c:v", output.getCodec(), "-preset", "slow", "-crf", output.getBitrateVariation(), "-c:a", "aac", "-b:a", "128k", "-vf", String.format("scale=-2:%s", output.getIntResolution()), output.getVideoPath());
+        ProcessBuilder builder = new ProcessBuilder(ffmpegPath,
+                "-i", input.getVideoPath(),
+                "-c:v", output.getCodec(),
+                "-preset", "slow", "-crf", output.getBitrateVariation(), "-minrate", output.getMinBitrate(),
+                "-c:a", "aac", "-b:a", "128k", "-vf", String.format("scale=-2:%s", output.getIntResolution()), output.getVideoPath());
 
         System.out.println(builder.command());
 

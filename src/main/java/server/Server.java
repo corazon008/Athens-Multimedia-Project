@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 import shared.*;
@@ -14,10 +15,9 @@ import shared.Enum.Resolution;
 import shared.Enum.VideoFormat;
 
 public class Server extends Connected {
-    private static Map<Integer, Resolution> bitrates = Map.of(400, Resolution.P240, 750, Resolution.P360, 1000, Resolution.P480, 2500, Resolution.P720, 4500, Resolution.P1080);
-
-    private static Logger logger = Logger.getLogger("Server");
     public static String clientIP;
+    private static Map<Integer, Resolution> bitrates = Map.of(400, Resolution.P240, 750, Resolution.P360, 1000, Resolution.P480, 2500, Resolution.P720, 4500, Resolution.P1080);
+    private static Logger logger = Logger.getLogger("Server");
 
     public static void main(String[] args) throws Exception {
         //FfmpegHandler.FfmpegMakeAllResAndFormat();
@@ -47,21 +47,26 @@ public class Server extends Connected {
             System.out.println("Protocol selected by client : " + protocol);
 
             Runnable rtpSendSdpFile = () -> {
-                try {
-                    if (!clientSocket.isClosed()) {
-                        //TODO
-                    }
+                if (clientSocket.isClosed()) {
+                    logger.warning("Client socket is closed. Skipping...");
+                    return;
+                }
+                try (FileInputStream sdfFile = new FileInputStream("stream.sdp")) {
+                    byte[] bytes = sdfFile.readAllBytes();
+                    logger.info("Sending SDP file to client...");
+                    SendObject(bytes, clientSocket);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             };
+
             logger.info("Waiting client to be ready...");
             while (true) {
                 Object object = ReadObject(clientSocket);
                 if (object instanceof String && object.equals("start")) {
-                    logger.info("Client is ready to start streaming");
+                    logger.info("Client is ready to start streaming.");
                     logger.info("Starting stream...");
-                    FfmpegHandler.BeginStream(protocol, filteredVideos.get(videoIndex));
+                    FfmpegHandler.BeginStream(protocol, filteredVideos.get(videoIndex), rtpSendSdpFile);
                     break;
                 }
             }

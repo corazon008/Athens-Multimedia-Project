@@ -1,5 +1,6 @@
 package client.UI.Scene;
 
+import client.UserSelection;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Scene;
@@ -7,8 +8,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.FFmpegLogCallback;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
+import shared.Enum.ProtocolType;
 
 import java.awt.image.BufferedImage;
 
@@ -40,7 +43,14 @@ public class Stream extends Scene {
 
     private void StartFfmpegStreaming() {
         try {
+            FFmpegLogCallback.set();
             grabber = new FFmpegFrameGrabber(streamUrl);
+            if (UserSelection.protocol == ProtocolType.RTP) {
+                grabber.setFormat("sdp");
+                grabber.setOption("protocol_whitelist", "file,udp,rtp");
+                grabber.setOption("analyzeduration", "15000000"); // 15s
+                grabber.setOption("probesize", "15000000");
+            }
             grabber.start();
             System.out.println("Started streaming from: " + streamUrl);
 

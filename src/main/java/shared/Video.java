@@ -8,7 +8,8 @@ import java.io.Serializable;
 import java.util.Map;
 
 public class Video implements Cloneable, Serializable {
-    private static Map<Resolution, Integer> bitrates = Map.of(Resolution.P240, 400, Resolution.P360, 750, Resolution.P480, 1000, Resolution.P720, 2500, Resolution.P1080, 4500);
+    private static Map<Resolution, Integer> averageBitrates = Map.of(Resolution.P240, 400, Resolution.P360, 750, Resolution.P480, 1000, Resolution.P720, 2500, Resolution.P1080, 4500);
+    private static Map<Resolution, Integer> minBitrates = Map.of(Resolution.P240, 300, Resolution.P360, 400, Resolution.P480, 500, Resolution.P720, 1500, Resolution.P1080, 3000);
 
     private Resolution resolution;
     private VideoFormat videoFormat;
@@ -95,8 +96,13 @@ public class Video implements Cloneable, Serializable {
     }
 
     // e.g 400k
-    public String getBitrate() {
-        return String.format("%sk", bitrates.get(resolution));
+    public String getAverageBitrate() {
+        return String.format("%sk", averageBitrates.get(resolution));
+    }
+
+    // e.g 300k
+    public String getMinBitrate() {
+        return String.format("%sk", minBitrates.get(resolution));
     }
 
     public String getBitrateVariation() {

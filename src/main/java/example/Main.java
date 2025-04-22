@@ -1,28 +1,27 @@
 package example;
 
+import java.io.*;
 import java.util.logging.*;
 
 public class Main {
-    private static final Logger log = Logger.getLogger(Main.class.getName());
-
     public static void main(String[] args) {
-        log.setUseParentHandlers(false); // Évite les logs en double
-
-        // Crée un handler qui écrit sur System.out
-        ConsoleHandler handler = new ConsoleHandler();
-
-        handler.setLevel(Level.ALL);
-        log.addHandler(handler);
-        log.setLevel(Level.ALL);
-
-        log.severe("Ceci est un message SEVERE");
-        log.warning("Ceci est un message WARNING");
-        log.info("Ceci est un message INFO");
-        log.config("Ceci est un message CONFIG");
-        log.fine("Ceci est un message FINE");
-        log.finer("Ceci est un message FINER");
-        log.finest("Ceci est un message FINEST");
-
-        System.out.println("Fin du programme.");
+        try {
+            FileInputStream file = new
+                    FileInputStream(".gitignore");
+            boolean eof = false;
+            int count = 0;
+            while (!eof) {
+                int input = file.read();
+                System.out.print(input + " ");
+                if (input == -1)
+                    eof = true;
+                else
+                    count++;
+            }
+            file.close();
+            System.out.println("\nBytes read: " + count);
+        } catch(IOException e) {
+            System.out.println("Error " + e.toString());
+        }
     }
 }

@@ -9,6 +9,8 @@ import shared.Enum.EndpointType;
 import shared.Enum.ProtocolType;
 import shared.Enum.Resolution;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.logging.Logger;
 
 public class Client extends Connected {
     private static Logger logger = Logger.getLogger("Client");
+    private static File workingDirectory = new File("tmp\\client");
 
     public static void main(String[] args) throws InterruptedException {
         FXManager.StartApp();
@@ -72,7 +75,19 @@ public class Client extends Connected {
                 }
             };
 
-            FXManager.StartStreamView(streamUrl, startServer, stopServer);
+            if (UserSelection.protocol == ProtocolType.RTP) {
+                startServer.run();
+                try (FileOutputStream sdpFile = new FileOutputStream(workingDirectory + File.separator + "stream.sdp")){
+                    byte[] bytes = (byte[]) ReadObject(socket);
+                    sdpFile.write(bytes);
+                    sdpFile.flush();
+                    System.out.println("SDP file received");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            FXManager.StartStreamViewFfplay(streamUrl, startServer, stopServer);
             FXManager.WaitCurrentView();
 
         } catch (Exception e) {
