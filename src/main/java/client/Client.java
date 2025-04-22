@@ -75,24 +75,14 @@ public class Client extends Connected {
                 }
             };
 
-            if (UserSelection.protocol == ProtocolType.RTP) {
-                startServer.run();
-                try (FileOutputStream sdpFile = new FileOutputStream(workingDirectory + File.separator + "stream.sdp")){
-                    byte[] bytes = (byte[]) ReadObject(socket);
-                    sdpFile.write(bytes);
-                    sdpFile.flush();
-                    System.out.println("SDP file received");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
             FXManager.StartStreamViewFfplay(streamUrl, startServer, stopServer);
             FXManager.WaitCurrentView();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        FXManager.Close();
     }
 
     public static ProtocolType ChooseProtocolAuto(Resolution resolution) {

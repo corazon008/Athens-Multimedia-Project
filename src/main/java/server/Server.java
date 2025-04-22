@@ -21,7 +21,6 @@ public class Server extends Connected {
 
     public static void main(String[] args) throws Exception {
         //FfmpegHandler.FfmpegMakeAllResAndFormat();
-        //filterVideo(VideoFormat.MP4, Resolution.P480);
         try (ServerSocket serverSocket = new ServerSocket(ServerInfo.serverSocketPort)) {
             logger.info("Server started on port " + ServerInfo.serverSocketPort);
             logger.info("Waiting for connection...");
@@ -46,27 +45,13 @@ public class Server extends Connected {
             ProtocolType protocol = (ProtocolType) ReadObject(clientSocket);
             System.out.println("Protocol selected by client : " + protocol);
 
-            Runnable rtpSendSdpFile = () -> {
-                if (clientSocket.isClosed()) {
-                    logger.warning("Client socket is closed. Skipping...");
-                    return;
-                }
-                try (FileInputStream sdfFile = new FileInputStream("stream.sdp")) {
-                    byte[] bytes = sdfFile.readAllBytes();
-                    logger.info("Sending SDP file to client...");
-                    SendObject(bytes, clientSocket);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            };
-
             logger.info("Waiting client to be ready...");
             while (true) {
                 Object object = ReadObject(clientSocket);
                 if (object instanceof String && object.equals("start")) {
                     logger.info("Client is ready to start streaming.");
                     logger.info("Starting stream...");
-                    FfmpegHandler.BeginStream(protocol, filteredVideos.get(videoIndex), rtpSendSdpFile);
+                    FfmpegHandler.BeginStream(protocol, filteredVideos.get(videoIndex));
                     break;
                 }
             }

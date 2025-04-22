@@ -3,7 +3,6 @@ package shared;
 import server.Server;
 import shared.Enum.EndpointType;
 import shared.Enum.ProtocolType;
-import server.Enum.RTPStreamType;
 import shared.Enum.Resolution;
 import shared.Enum.VideoFormat;
 
@@ -29,13 +28,6 @@ public class SharedInfo {
     }
 
     public static String GetStreamUrl(ProtocolType protocol, EndpointType endpointType) {
-        if (protocol == ProtocolType.RTP && endpointType == EndpointType.SERVER) {
-            throw new IllegalArgumentException("RTP protocol requires RTPStreamType");
-        }
-        return GetStreamUrl(protocol, endpointType, null);
-    }
-
-    public static String GetStreamUrl(ProtocolType protocol, EndpointType endpointType, RTPStreamType rtpStreamType) {
         if (protocol == null) {
             throw new IllegalArgumentException("Protocol cannot be null");
         }
@@ -50,7 +42,7 @@ public class SharedInfo {
                 case TCP:
                     return String.format("tcp://%s:%d", ServerInfo.serverIP, ServerInfo.serverFfmpegVideoPort);
                 case RTP:
-                    return "stream.sdp";
+                    return String.format("rtp://%s:%d", "0.0.0.0", ServerInfo.serverFfmpegVideoPort);
                 default:
                     throw new IllegalArgumentException("Unknown protocol: " + protocol);
             }
@@ -61,16 +53,10 @@ public class SharedInfo {
                 case TCP:
                     return String.format("tcp://%s:%d/?listen", "0.0.0.0", ServerInfo.serverFfmpegVideoPort);
                 case RTP:
-                    if (rtpStreamType == RTPStreamType.VIDEO)
-                        return String.format("rtp://%s:%d", Server.clientIP, ServerInfo.serverFfmpegVideoPort);
-                    else if (rtpStreamType == RTPStreamType.AUDIO)
-                        return String.format("rtp://%s:%d", Server.clientIP, ServerInfo.serverFfmpegAudioPort);
-                    else
-                        throw new IllegalArgumentException("Unknown RTP stream type: " + rtpStreamType);
+                    return String.format("rtp://%s:%d", Server.clientIP, ServerInfo.serverFfmpegVideoPort);
                 default:
                     throw new IllegalArgumentException("Unknown protocol: " + protocol);
             }
         }
-
     }
 }

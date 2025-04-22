@@ -1,6 +1,5 @@
 package client.UI;
 
-import client.UI.Scene.Stream;
 import client.UI.Scene.StreamSettings;
 import client.UI.Views.BaseView;
 import javafx.application.Application;
@@ -41,34 +40,10 @@ public class FXManager extends Application {
         });
     }
 
-    public static void StartStreamView(String url, Runnable onStart, Runnable onClose) {
-        // Wait for the JavaFX application to start
-        try {
-            startupLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        currentViewLatch = new CountDownLatch(1);
-        Platform.runLater(() -> {
-            logger.info("Starting Stream View...");
-            Stream stream = new Stream(url, onStart);
-            primaryStage.setScene(stream);
-            primaryStage.show();
-            primaryStage.setTitle("Streaming");
-            primaryStage.setOnCloseRequest(event -> {
-                System.out.println("Closing stream");
-                onClose.run();
-                primaryStage.close();
-                stream.Stop();
-                currentViewLatch.countDown();
-            });
-        });
-    }
-
     public static void StartStreamViewFfplay(String url, Runnable onStart, Runnable onClose) {
         currentViewLatch = new CountDownLatch(1);
 
-        ProcessBuilder builder = new ProcessBuilder(ffplayPath, url);
+        ProcessBuilder builder = new ProcessBuilder(ffplayPath, url, "-y", "720");
 
         System.out.println(builder.command());
 
@@ -94,6 +69,10 @@ public class FXManager extends Application {
         primaryStage.setTitle("Video Player");
         primaryStage.show();
         startupLatch.countDown();
+    }
+
+    public static void Close() {
+        Platform.exit();
     }
 
     public static void WaitCurrentView() {
