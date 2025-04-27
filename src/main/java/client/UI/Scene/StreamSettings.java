@@ -22,19 +22,8 @@ public class StreamSettings extends Scene {
         try {
             BaseView root = viewClass.getConstructor(double.class, Runnable.class)
                     .newInstance(10.0, (Runnable) () -> latch.countDown());
+            root.setMinWidth(275);
             super.setRoot(root);
-
-            root.sceneProperty().addListener((obs, oldScene, newScene) -> {
-                if (newScene != null) {
-                    newScene.windowProperty().addListener((obsWindow, oldWindow, newWindow) -> {
-                        if (newWindow != null) {
-                            newWindow.sizeToScene();
-                        }
-                    });
-                }
-            });
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }
