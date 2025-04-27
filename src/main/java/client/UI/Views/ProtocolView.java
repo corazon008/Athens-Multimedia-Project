@@ -1,9 +1,9 @@
 package client.UI.Views;
 
-import client.Client;
 import javafx.scene.control.*;
 import shared.Enum.ProtocolType;
 import client.UserSelection;
+import shared.Enum.Resolution;
 
 /**
  * ProtocolView is a class that extends BaseView and represents a view for selecting the protocol.
@@ -30,7 +30,7 @@ public class ProtocolView extends BaseView {
         Button submitButton = new Button("Submit");
         submitButton.setOnAction(event -> {
             if (group.getSelectedToggle() == null) {
-                UserSelection.protocol = Client.ChooseProtocolAuto(UserSelection.videosAvailable.get(UserSelection.selectedVideoIndex).getResolution());
+                UserSelection.protocol = ChooseProtocolAuto(UserSelection.videosAvailable.get(UserSelection.selectedVideoIndex).getResolution());
             }else {
                 UserSelection.protocol = (ProtocolType) group.getSelectedToggle().getUserData();
             }
@@ -38,5 +38,16 @@ public class ProtocolView extends BaseView {
         });
 
         this.getChildren().addAll(udpButton, tcpButton, rtpButton, new Separator(), submitButton);
+    }
+
+    private static ProtocolType ChooseProtocolAuto(Resolution resolution) {
+        if (resolution == Resolution.P240)
+            return ProtocolType.TCP;
+        else if (resolution == Resolution.P360 || resolution == Resolution.P480)
+            return ProtocolType.UDP;
+        else if (resolution == Resolution.P720 || resolution == Resolution.P1080)
+            return ProtocolType.RTP;
+        else
+            return ProtocolType.TCP;
     }
 }

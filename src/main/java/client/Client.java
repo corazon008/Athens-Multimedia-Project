@@ -84,15 +84,4 @@ public class Client extends Connected {
 
         FXManager.Close();
     }
-
-    public static ProtocolType ChooseProtocolAuto(Resolution resolution) {
-        if (resolution == Resolution.P240)
-            return ProtocolType.TCP;
-        else if (resolution == Resolution.P480 || resolution == Resolution.P720)
-            return ProtocolType.UDP;
-        else if (resolution == Resolution.P1080)
-            return ProtocolType.RTP;
-        else
-            return ProtocolType.TCP;
-    }
 }
