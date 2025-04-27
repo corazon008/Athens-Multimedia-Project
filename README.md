@@ -8,3 +8,14 @@ This Project contain three packages :
 
 ## Requirements
 - ffmpeg and ffplay
+
+## Usage
+### Server
+Since making all the resolution and format of the video takes a lot of time, this function is by default commented. \
+To enable it, uncomment the first line in `Server.java` and run the server:
+```java
+public static void main(String[] args) throws Exception {
+    //FfmpegHandler.FfmpegMakeAllResAndFormat();
+    ...
+}
+```
