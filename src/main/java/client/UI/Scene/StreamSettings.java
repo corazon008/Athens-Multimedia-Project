@@ -20,13 +20,23 @@ public class StreamSettings extends Scene {
 
     private void InitUI(Class<? extends BaseView> viewClass) {
         try {
-            BaseView root = viewClass.getConstructor(double.class, Runnable.class).newInstance(10.0, (Runnable) () -> latch.countDown());
+            BaseView root = viewClass.getConstructor(double.class, Runnable.class)
+                    .newInstance(10.0, (Runnable) () -> latch.countDown());
             super.setRoot(root);
+
+            root.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene != null) {
+                    newScene.windowProperty().addListener((obsWindow, oldWindow, newWindow) -> {
+                        if (newWindow != null) {
+                            newWindow.sizeToScene();
+                        }
+                    });
+                }
+            });
+
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
-
 }
